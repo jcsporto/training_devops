@@ -23,7 +23,14 @@ variable "tags" {
 variable "remote_backend" {
   type = object({
     bucket = string
+    state_locking = object({
+      dynamodb_table_name          = string
+      dynamodb_table_billing_mode  = string
+      dynamodb_table_hash_key      = string
+      dynamodb_table_hash_key_type = string
+    })
   })
-  description = "S3 bucket for remote state storage"
+
+  description = "S3 bucket and DynamoDB table for remote state storage and locking"
   # Define valores no arquivo terraform.tfvars (não versionado)
 }

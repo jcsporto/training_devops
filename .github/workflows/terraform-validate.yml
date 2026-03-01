@@ -1,0 +1,44 @@
+name: Terraform Validation
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  terraform:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.9.4
+        
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+      
+    - name: Terraform Init - Backend
+      run: |
+        cd backend
+        terraform init -backend=false
+        
+    - name: Terraform Validate - Backend
+      run: |
+        cd backend
+        terraform validate
+        
+    - name: Terraform Init - Networking
+      run: |
+        cd networking
+        terraform init -backend=false
+        
+    - name: Terraform Validate - Networking
+      run: |
+        cd networking
+        terraform validate

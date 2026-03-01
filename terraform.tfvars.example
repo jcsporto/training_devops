@@ -1,0 +1,18 @@
+# Copie este arquivo para terraform.tfvars e preencha com seus valores reais
+# NUNCA commite o arquivo terraform.tfvars no Git!
+
+region = "us-east-1"
+
+assume_role = {
+  role_arn    = "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
+  external_id = "YOUR_EXTERNAL_ID_HERE"
+}
+
+tags = {
+  Project     = "not-so-simple-ecommerce"
+  Environment = "production"
+}
+
+remote_backend = {
+  bucket = "YOUR_BUCKET_NAME_HERE"
+}

@@ -24,11 +24,3 @@ provider "aws" {
     external_id = var.assume_role.external_id
   }
 }
-
-# resource "aws_vpc" "example" {
-#   cidr_block = "10.0.0.0/16"
-# }
-
-# resource "aws_vpc" "example2" {
-#   cidr_block = "10.0.0.0/16"
-# }

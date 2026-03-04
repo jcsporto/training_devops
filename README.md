@@ -1,126 +1,235 @@
-# 🚀 DevOps Training - Terraform Infrastructure as Code
+# 🔍 Terraform Multi-Account Checker
 
-Projeto de estudos focado em Infrastructure as Code (IaC) utilizando Terraform para provisionamento de recursos na AWS.
+Script genérico e inteligente para validar configurações Terraform em projetos AWS multi-account.
 
-## 📋 Sobre o Projeto
+**Adapta-se automaticamente** à estrutura do seu projeto - funciona em qualquer organização de código!
 
-Este repositório demonstra conhecimentos práticos em:
-- **Terraform**: Provisionamento de infraestrutura declarativa
-- **AWS**: Gerenciamento de recursos cloud (S3, VPC, IAM)
-- **Git/GitHub**: Versionamento de código com boas práticas de segurança
-- **DevOps**: Automação e gerenciamento de infraestrutura
+## 🎯 O que ele valida?
 
-## 🏗️ Estrutura do Projeto
+- ✅ **Profile no Backend S3** - Evita usar credenciais erradas
+- ✅ **Profile no Provider AWS** - Garante consistência
+- ✅ **Assume Role** - Valida configuração cross-account
+- ✅ **AWS Credentials** - Verifica profiles disponíveis
+- ✅ **Nome do Bucket S3** - Alerta sobre nomes genéricos
+- ✅ **Versionamento** - Recomenda backup do state
+- ✅ **State Locking** - Valida DynamoDB configurado
+- ✅ **Segurança** - Verifica .gitignore e credenciais hardcoded
 
-```
-devops-training/
-├── backend/              # Configuração de backend remoto (S3)
-│   ├── main.tf          # Provider AWS e configurações
-│   ├── variables.tf     # Definição de variáveis
-│   └── s3.bucket.tf     # Bucket S3 para remote state
-│
-├── networking/          # Recursos de rede
-│   ├── main.tf         # VPC e configurações de rede
-│   └── variables.tf    # Variáveis de rede
-│
-└── terraform.tfvars.example  # Template de variáveis
-```
-
-## 🔧 Recursos Provisionados
-
-### Backend Module
-- **S3 Bucket**: Armazenamento de Terraform state com versionamento habilitado
-- **IAM Role**: Assume role com external ID para segurança adicional
-
-### Networking Module
-- **VPC**: Virtual Private Cloud com CIDR 10.0.0.0/16
-- **Remote State**: Backend S3 configurado para state compartilhado
-
-## 🚀 Como Usar
-
-### Pré-requisitos
-- Terraform >= 1.9
-- AWS CLI configurado
-- Credenciais AWS com permissões adequadas
-
-### Configuração Inicial
-
-1. Clone o repositório:
-```bash
-git clone <seu-repositorio>
-cd devops-training
-```
-
-2. Configure suas credenciais:
-```bash
-# Copie o template
-cp terraform.tfvars.example terraform.tfvars
-
-# Edite com suas credenciais (este arquivo NÃO será commitado)
-vim terraform.tfvars
-```
-
-3. Configure o AWS profile:
-```bash
-aws configure --profile training_devops
-```
-
-### Executando o Terraform
+## 🚀 Uso
 
 ```bash
-# Backend - Criar bucket para remote state
-cd backend/
-terraform init
-terraform plan
-terraform apply
+# Download
+curl -O https://gist.githubusercontent.com/[seu-user]/[gist-id]/raw/check-terraform-generic.sh
 
-# Networking - Provisionar VPC
-cd ../networking/
-terraform init
-terraform plan
-terraform apply
+# Tornar executável
+chmod +x check-terraform-generic.sh
+
+# Executar no diretório do projeto
+./check-terraform-generic.sh
 ```
 
-## 🔒 Segurança
+## 📊 Exemplo de Saída
 
-Este projeto implementa as seguintes práticas de segurança:
+```
+🔍 Verificando configuração do Terraform...
 
-✅ **Separação de credenciais**: Valores sensíveis em `terraform.tfvars` (não versionado)  
-✅ **GitIgnore robusto**: Proteção contra commit acidental de secrets  
-✅ **IAM Assume Role**: Uso de roles com external ID  
-✅ **Remote State**: State armazenado em S3 com versionamento  
-✅ **No hardcoded secrets**: Todas as credenciais via variáveis
+📁 Arquivos Terraform encontrados:
+   ./backend/main.tf
+   ./networking/main.tf
 
-### Arquivos Protegidos (não versionados)
-- `*.tfvars` - Credenciais e valores sensíveis
-- `*.tfstate` - Estado da infraestrutura
-- `.terraform/` - Dependências e cache
+🔐 [1/7] Verificando profile no backend...
+   ✅ Profile configurado no backend S3
 
-## 📚 Conceitos Aplicados
+🔐 [2/7] Verificando profile no provider...
+   ✅ Profile configurado no provider: production
 
-- **Infrastructure as Code (IaC)**: Infraestrutura versionada e reproduzível
-- **Remote State**: Compartilhamento seguro do state entre equipes
-- **Modularização**: Separação lógica de recursos (backend/networking)
-- **Variables**: Parametrização para diferentes ambientes
-- **Security Best Practices**: Proteção de credenciais e secrets
+🎭 [3/7] Verificando assume_role...
+   ✅ Assume role configurado
 
-## 🎯 Objetivos de Aprendizado
+🔑 [4/7] Verificando credentials AWS...
+   ✅ Arquivo credentials encontrado (3 profile(s))
+   📋 Profiles disponíveis:
+      - dev
+      - staging
+      - production
 
-- [x] Configurar provider AWS com assume role
-- [x] Criar e gerenciar remote state em S3
-- [x] Provisionar recursos de rede (VPC)
-- [x] Implementar segurança no versionamento de código
-- [x] Estruturar projeto Terraform modular
-- [ ] Adicionar módulos de compute (EC2, ECS)
-- [ ] Implementar CI/CD com GitHub Actions
-- [ ] Adicionar testes de infraestrutura (Terratest)
+🪣 [5/7] Verificando configuração do bucket S3...
+   📦 Buckets encontrados:
+      - terraform-state-mycompany-123456789012
+   ✅ Nome de bucket parece único
 
-## 📖 Referências
+🔄 [6/7] Verificando versionamento do bucket...
+   ✅ Versionamento habilitado no bucket
 
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [Terraform Best Practices](https://www.terraform-best-practices.com/)
-- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
+🔒 [7/7] Verificando state locking...
+   ✅ State locking configurado (DynamoDB)
+
+🔒 BONUS: Verificando segurança...
+   ✅ Arquivos sensíveis no .gitignore
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 Todas as verificações passaram!
+   Projeto configurado corretamente!
+```
+
+## 🏗️ Estruturas Suportadas
+
+O script funciona com **qualquer** estrutura de projeto:
+
+### Estrutura Simples (Flat)
+```
+.
+├── main.tf
+├── variables.tf
+└── terraform.tfvars
+```
+
+### Estrutura Modular
+```
+.
+├── backend/
+│   ├── main.tf
+│   ├── variables.tf
+│   └── dynamodb.tf
+├── networking/
+│   ├── main.tf
+│   └── vpc.tf
+└── modules/
+    └── ...
+```
+
+### Estrutura por Ambiente
+```
+.
+├── environments/
+│   ├── dev/
+│   │   └── main.tf
+│   ├── staging/
+│   │   └── main.tf
+│   └── prod/
+│       └── main.tf
+└── modules/
+```
+
+### Estrutura Complexa
+```
+.
+├── infrastructure/
+│   ├── aws/
+│   │   ├── backend/
+│   │   └── networking/
+│   └── modules/
+└── terraform/
+    └── ...
+```
+
+**Funciona em todas!** 🎉
+
+## 🔧 Integração CI/CD
+
+### GitHub Actions
+
+```yaml
+name: Terraform Validation
+
+on: [pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download checker
+        run: curl -O https://gist.githubusercontent.com/[seu-user]/[gist-id]/raw/check-terraform-generic.sh
+      
+      - name: Validate Terraform Config
+        run: |
+          chmod +x check-terraform-generic.sh
+          ./check-terraform-generic.sh
+```
+
+### GitLab CI
+
+```yaml
+terraform-check:
+  stage: validate
+  script:
+    - curl -O https://gist.githubusercontent.com/[seu-user]/[gist-id]/raw/check-terraform-generic.sh
+    - chmod +x check-terraform-generic.sh
+    - ./check-terraform-generic.sh
+```
+
+### Pre-commit Hook
+
+```bash
+# .git/hooks/pre-commit
+#!/bin/bash
+./check-terraform-generic.sh || exit 1
+```
+
+## ⚠️ Códigos de Saída
+
+- `0` - ✅ Sucesso (sem erros, pode ter avisos)
+- `1` - ❌ Falha (erros críticos encontrados)
+
+## 🎨 Personalização
+
+Você pode ajustar o comportamento editando as variáveis:
+
+```bash
+ERRORS=0      # Incrementa para bloquear execução
+WARNINGS=0    # Incrementa apenas para alertar
+```
+
+## 📚 Checklist Completo
+
+Use este checklist antes de fazer deploy:
+
+- [ ] Profile configurado no backend S3
+- [ ] Profile configurado no provider AWS
+- [ ] Assume role configurado (se necessário)
+- [ ] Credentials AWS disponíveis localmente
+- [ ] Bucket S3 com nome globalmente único
+- [ ] Versionamento habilitado no bucket
+- [ ] State locking com DynamoDB
+- [ ] Arquivos .tfvars no .gitignore
+- [ ] Arquivos .tfstate no .gitignore
+- [ ] Sem credenciais hardcoded no código
+
+## 🤝 Contribuindo
+
+Encontrou um bug? Tem uma sugestão?
+
+- Abra uma issue
+- Faça um fork e envie um PR
+- Compartilhe com a comunidade!
+
+## 📝 Licença
+
+MIT License - Use livremente!
+
+## 💡 Inspiração
+
+Criado a partir de discussões na comunidade DevOps sobre as dificuldades de trabalhar com múltiplas contas AWS.
 
 ---
 
-💡 **Projeto desenvolvido para fins de estudo e demonstração de habilidades em DevOps/Cloud**
+**Feito com ❤️ para a comunidade DevOps**
+
+Se este script te ajudou, considere:
+- ⭐ Dar uma estrela no Gist
+- 🔄 Compartilhar com seu time
+- 💬 Deixar feedback
+
+## 🔗 Links Úteis
+
+- [Terraform Backend Configuration](https://www.terraform.io/docs/language/settings/backends/s3.html)
+- [AWS Multi-Account Strategy](https://aws.amazon.com/organizations/getting-started/best-practices/)
+- [Terraform Best Practices](https://www.terraform-best-practices.com/)
+
+---
+
+**Versão:** 1.0.0  
+**Última atualização:** Março 2026  
+**Autor:** Jean Porto

@@ -14,12 +14,12 @@ variable "assume_role" {
 variable "vpc" {
 
   type = object({
-    name                    = string
-    cidr_block              = string
-    internet_gateway_name   = string
-    nat_gateway_name        = string
+    name                     = string
+    cidr_block               = string
+    internet_gateway_name    = string
+    nat_gateway_name         = string
     private_route_table_name = string
-    public_route_table_name = string
+    public_route_table_name  = string
     eip_name                 = string
     public_subnets = list(object({
       name                    = string

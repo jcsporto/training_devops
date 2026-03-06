@@ -14,14 +14,36 @@ variable "assume_role" {
 
 variable "ec2_resources" {
   type = object({
-    key_pair_name    = string
-    instance_profile = string
-    instance_role    = string
+    key_pair_name      = string
+    instance_profile   = string
+    instance_role      = string
+    ssh_security_group = string
+    ssh_source_ip      = string
   })
 
   default = {
-    key_pair_name    = "training-devops-key-pair"
-    instance_role    = "training-devops-instance-role"
-    instance_profile = "training-devops-instance-profile"
+    key_pair_name      = "training-devops-key-pair"
+    instance_role      = "training-devops-instance-role"
+    instance_profile   = "training-devops-instance-profile"
+    ssh_security_group = "allow-ssh"
+    ssh_source_ip      = "189.84.221.96/32"
   }
+}
+
+
+
+variable "vpc_resources" {
+  type = object({
+    vpc = string
+  })
+
+  default = {
+    vpc = "training-devops-vpc"
+  }
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Tags to apply to resources"
+  default     = {}
 }

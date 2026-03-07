@@ -34,6 +34,17 @@ devops-training/
 │   ├── vpc.nat-gateways.tf            # NAT Gateways (HA)
 │   └── ec2.eips.tf                    # Elastic IPs para NAT
 │
+├── Server/                     # Recursos de computação (EC2)
+│   ├── main.tf                # Backend e provider configuration
+│   ├── variables.tf           # Variáveis de EC2
+│   ├── outputs.tf             # Outputs (private key)
+│   ├── data.vpc.tf            # Data source para VPC
+│   ├── data.ec2.ami.tf        # Data source para AMI Debian
+│   ├── ec2.key-pair.tf        # Key pair para SSH (TLS)
+│   ├── ec2.security-groups.tf # Security groups
+│   ├── ec2.instace-profile.tf # IAM instance profile e role
+│   └── ec2.launch-template.tf # Launch template para EC2
+│
 ├── check-terraform.sh          # Script de validação específico
 ├── check-terraform-generic.sh  # Script de validação genérico
 └── terraform.tfvars.example    # Template de variáveis
@@ -56,12 +67,35 @@ devops-training/
 - **Route Tables**: Roteamento público (IGW) e privado (NAT Gateway)
 - **Remote State**: Backend S3 configurado para state compartilhado
 
+### Server Module
+- **Data Sources**:
+  - VPC lookup por tag name
+  - AMI Debian 12 (x86_64) mais recente
+- **IAM Resources**:
+  - IAM Role para instâncias EC2
+  - IAM Instance Profile
+  - Policy document para assume role (EC2 service)
+- **EC2 Key Pair**: Par de chaves SSH gerado via TLS provider
+- **Security Groups**: Regras de firewall para SSH com IP específico
+- **Launch Template**: Template para provisionamento de instâncias EC2
+  - AMI: Debian 12 (x86_64)
+  - Instance Type: t3.micro
+  - EBS: 20GB (device /dev/sdf)
+  - IAM Instance Profile integrado
+  - Proteção contra stop/terminate via API
+  - Tag specifications dinâmicas (opcional)
+- **Remote State**: Backend S3 configurado (key: server/terraform.tfstate)
+
 ## 🚀 Como Usar
 
 ### Pré-requisitos
 - Terraform >= 1.9
 - AWS CLI configurado
 - Credenciais AWS com permissões adequadas
+
+### Providers Utilizados
+- **hashicorp/aws** ~> 6.0 - Provider AWS para recursos de infraestrutura
+- **hashicorp/tls** ~> 4.0 - Provider TLS para geração de chaves SSH
 
 ### Configuração Inicial
 
@@ -99,6 +133,16 @@ cd ../networking/
 terraform init
 terraform plan
 terraform apply
+
+# Server - Provisionar recursos de computação
+cd ../Server/
+terraform init
+terraform plan
+terraform apply
+
+# Salvar a chave privada (output sensível)
+terraform output -raw key_pair_private_key > training-devops-key-pair.pem
+chmod 400 training-devops-key-pair.pem
 ```
 
 ### Validando a Configuração
@@ -347,6 +391,78 @@ Este projeto implementa as seguintes práticas de segurança:
 
 ## 📅 Histórico de Desenvolvimento
 
+### 07/03/2026 - Correções e Refinamentos no Launch Template
+**Debugging e correções realizadas:**
+
+#### 🐛 Correções de Erros
+- ✅ **Fix: Data Source aws_ami**
+  - Problema: Atributo `architecture` não é configurável diretamente
+  - Solução: Movido para filter block
+  - Aprendizado: Diferença entre atributos computados e configuráveis
+
+- ✅ **Fix: Typo em shutdown_behavior**
+  - Problema: "terninate" em vez de "terminate"
+  - Solução: Correção do typo na variável
+  - Aprendizado: AWS valida rigorosamente valores de enum
+
+- ✅ **Fix: Tag Specifications vazias**
+  - Problema: AWS rejeita tags nulas/vazias
+  - Solução: Dynamic block condicional
+  - Aprendizado: APIs têm opiniões fortes sobre dados vazios
+
+#### 📝 Boas Práticas Aplicadas
+- ✅ **Commits Atômicos**: 3 commits individuais com mensagens descritivas
+- ✅ **Segurança**: Verificação de credenciais antes do push
+- ✅ **Documentação**: README atualizado com aprendizados
+
+**Commits**: be86629, fc9b841, 44302ef
+
+### 06/03/2026 - Finalização do Módulo Server
+**Implementações realizadas:**
+
+#### 🖥️ Recursos de Computação Finalizados
+- ✅ **Data Source VPC**: Busca VPC por tag name
+- ✅ **Security Group SSH**: Regras de firewall com IP específico
+- ✅ **Key Pair Generation**: Geração de chaves via TLS provider
+- ✅ **Variáveis Atualizadas**: Estrutura completa para EC2 e VPC resources
+
+#### 📝 Configuração
+- ✅ **Comentários no tfvars**: Documentação sobre assume_role
+
+**Commits**: 73a5be4, 1ee2922, 11d7bb2, fbcf46c, 5d8a6ca
+
+### 05/03/2026 - IAM Resources para EC2
+**Implementações realizadas:**
+
+#### 🔐 IAM Infrastructure
+- ✅ **IAM Instance Profile**: Profile para anexar role às instâncias
+- ✅ **IAM Role**: Role com assume role policy para EC2 service
+- ✅ **Policy Document**: Documento de política para EC2 assumir role
+- ✅ **Variáveis Expandidas**: Nomes de instance profile e role parametrizados
+
+**Commits**: 8bde1d9, 8fdadd6
+
+### 04/03/2026 - Início do Módulo Server
+**Implementações realizadas:**
+
+#### 🚀 Estrutura Base do Server Module
+- ✅ **Configuração Base**: Backend S3 e provider AWS
+- ✅ **Variáveis**: Estrutura de variáveis para recursos EC2
+- ✅ **Key Pair**: Recurso TLS para geração de chaves SSH
+- ✅ **Output Sensível**: Private key como output sensível
+
+#### 🏗️ Arquitetura Inicial
+```
+Server/
+├── main.tf (backend + provider)
+├── variables.tf
+├── outputs.tf
+├── ec2.key-pair.tf
+└── ec2.instace-profile.tf
+```
+
+**Commits**: 78bb06f, bade6f0, 9b31788, 6939d86
+
 ### 03/03/2026 - Expansão da Arquitetura de Rede
 **Implementações realizadas:**
 
@@ -441,7 +557,10 @@ VPC (10.0.0.0/24)
 - [x] Configurar NAT Gateways para alta disponibilidade
 - [x] Criar scripts de validação e automação
 - [x] Documentar arquitetura e processos
-- [ ] Adicionar módulos de compute (EC2, ECS)
+- [x] Configurar EC2 Launch Templates
+- [x] Implementar data sources para AMIs
+- [x] Debugar erros comuns do Terraform/AWS
+- [ ] Adicionar Auto Scaling Groups
 - [ ] Implementar CI/CD com GitHub Actions
 - [ ] Adicionar testes de infraestrutura (Terratest)
 

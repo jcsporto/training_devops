@@ -75,4 +75,31 @@ variable "control_plane_launch_template" {
   }
 }
 
+variable "control_plane_auto_sacaling_group" {
+  type = object({
+    name                      = string
+    min_size                  = number
+    max_size                  = number
+    desired_capacity          = number
+    health_check_grace_period = number
+    health_check_type         = string
+    instance_maintenance_policy = object({
+      min_healthy_percent = number
+      max_healthy_percent = number
+    })
+  })
+
+  default = {
+    name                      = "training_devops-control-plane-asg"
+    max_size                  = 1
+    min_size                  = 1
+    desired_capacity          = 1
+    health_check_grace_period = 180
+    health_check_type         = "EC2"
+    instance_maintenance_policy = {
+      min_healthy_percent = 100
+      max_healthy_percent = 110
+    }
+  }
+}
 

@@ -39,11 +39,19 @@ devops-training/
 │   ├── variables.tf           # Variáveis de EC2
 │   ├── outputs.tf             # Outputs (private key)
 │   ├── data.vpc.tf            # Data source para VPC
+│   ├── data.vpc.private-subnets.tf  # Data source para subnets privadas
 │   ├── data.ec2.ami.tf        # Data source para AMI Debian
 │   ├── ec2.key-pair.tf        # Key pair para SSH (TLS)
 │   ├── ec2.security-groups.tf # Security groups
 │   ├── ec2.instace-profile.tf # IAM instance profile e role
-│   └── ec2.launch-template.tf # Launch template para EC2
+│   ├── ec2.instances.control-plane.tf  # Instâncias control plane via módulo
+│   ├── ec2.instances.worker.tf         # Instâncias worker via módulo
+│   └── modules/
+│       └── ec2/               # Módulo reutilizável EC2
+│           ├── variables.tf           # Variáveis do módulo
+│           ├── ec2.launch-template.tf # Launch template
+│           ├── ec2.auto-scaling-group.tf # Auto Scaling Group
+│           └── outputs.tf             # Outputs do módulo
 │
 ├── check-terraform.sh          # Script de validação específico
 ├── check-terraform-generic.sh  # Script de validação genérico
@@ -70,6 +78,7 @@ devops-training/
 ### Server Module
 - **Data Sources**:
   - VPC lookup por tag name
+  - Subnets privadas por tag e VPC ID
   - AMI Debian 12 (x86_64) mais recente
 - **IAM Resources**:
   - IAM Role para instâncias EC2
@@ -77,13 +86,11 @@ devops-training/
   - Policy document para assume role (EC2 service)
 - **EC2 Key Pair**: Par de chaves SSH gerado via TLS provider
 - **Security Groups**: Regras de firewall para SSH com IP específico
-- **Launch Template**: Template para provisionamento de instâncias EC2
-  - AMI: Debian 12 (x86_64)
-  - Instance Type: t3.micro
-  - EBS: 20GB (device /dev/sdf)
-  - IAM Instance Profile integrado
-  - Proteção contra stop/terminate via API
-  - Tag specifications dinâmicas (opcional)
+- **Módulo EC2 Reutilizável** (`modules/ec2/`):
+  - Launch Template com AMI, instance type, EBS, IAM profile e security groups
+  - Auto Scaling Group com health check, maintenance policy e tags
+- **Instâncias Control Plane**: Provisionadas via módulo EC2 com variáveis dedicadas
+- **Instâncias Worker**: Provisionadas via módulo EC2 com variáveis dedicadas
 - **Remote State**: Backend S3 configurado (key: server/terraform.tfstate)
 
 ## 🚀 Como Usar
@@ -383,13 +390,38 @@ Este projeto implementa as seguintes práticas de segurança:
 - **High Availability**: NAT Gateways em múltiplas AZs
 - **Network Segmentation**: Subnets públicas e privadas isoladas
 - **Remote State**: Compartilhamento seguro do state entre equipes
-- **Modularização**: Separação lógica de recursos (backend/networking)
+- **Modularização**: Módulo EC2 reutilizável para diferentes tipos de instância
 - **Variables**: Parametrização para diferentes ambientes
 - **Dynamic Resources**: Uso de count para criar recursos escaláveis
 - **Security Best Practices**: Proteção de credenciais e secrets
 - **Automation**: Scripts de validação e verificação
 
 ## 📅 Histórico de Desenvolvimento
+
+### 14/03/2026 - Modularização EC2: Control Plane e Workers
+**Refatoração e novos recursos:**
+
+#### 🏗️ Módulo EC2 Reutilizável
+- ✅ **Criação do módulo `modules/ec2/`**: Launch Template + Auto Scaling Group encapsulados
+- ✅ **Instâncias Control Plane**: Provisionadas via módulo com variáveis dedicadas
+- ✅ **Instâncias Worker**: Provisionadas via módulo com variáveis dedicadas
+- ✅ **Princípio DRY**: Mesmo módulo reutilizado para control plane e workers
+
+#### 🐛 Correções
+- ✅ **Fix: Typo `auto_sacaling_group`** → `auto_scaling_group` em todos os arquivos
+- ✅ **Fix: Nomes de campos inconsistentes** (`min_healthy_percentage` → `min_healthy_percent`)
+- ✅ **Fix: Referência incorreta do instance profile** no módulo
+- ✅ **Fix: Launch template version** `$latest` → `$Latest` (case-sensitive na AWS)
+- ✅ **Fix: Worker usando variáveis do control plane** → corrigido para variáveis worker
+- ✅ **Fix: Output com typo** `auto_sacaling_group_name` → `auto_scaling_group_name`
+- ✅ **Fix: Tags default vazias** → adicionados valores default para Project e Environment
+
+#### 📝 Boas Práticas
+- ✅ **8 commits atômicos** com mensagens descritivas seguindo conventional commits
+- ✅ **Verificação de credenciais** antes do push
+- ✅ **Terraform apply com sucesso** na AWS
+
+**Commits**: a23572d, 7f76f66, df3c2a7, 51046ff, 05f005f, 6ed3a39, f8d1bde, 0a207a7
 
 ### 07/03/2026 - Correções e Refinamentos no Launch Template
 **Debugging e correções realizadas:**
@@ -560,7 +592,8 @@ VPC (10.0.0.0/24)
 - [x] Configurar EC2 Launch Templates
 - [x] Implementar data sources para AMIs
 - [x] Debugar erros comuns do Terraform/AWS
-- [ ] Adicionar Auto Scaling Groups
+- [x] Adicionar Auto Scaling Groups
+- [x] Modularizar recursos EC2 (módulo reutilizável)
 - [ ] Implementar CI/CD com GitHub Actions
 - [ ] Adicionar testes de infraestrutura (Terratest)
 
